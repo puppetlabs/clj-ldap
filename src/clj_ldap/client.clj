@@ -104,12 +104,18 @@
     (when timeout         (.setResponseTimeoutMillis opt timeout))
     opt))
 
+(defn- create-trust-manager
+  "If the trust-store is truthy, returns a TrustStoreTrustManager created with
+  it; otherwise, returns a TrustAllTrustManager."
+  [trust-store]
+  (if trust-store
+    (TrustStoreTrustManager. trust-store)
+    (TrustAllTrustManager.)))
+
 (defn- create-ssl-factory
   "Returns a SSLSocketFactory object"
   [{:keys [trust-store]}]
-  (let [trust-manager (if trust-store
-                        (TrustStoreTrustManager. trust-store)
-                        (TrustAllTrustManager.))
+  (let [trust-manager (create-trust-manager trust-store)
         ssl-util (SSLUtil. trust-manager)]
     (.createSSLSocketFactory ssl-util)))
 
