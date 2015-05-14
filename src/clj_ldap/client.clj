@@ -25,7 +25,8 @@
             DereferencePolicy])
   (:import [com.unboundid.ldap.sdk.extensions
             PasswordModifyExtendedRequest
-            PasswordModifyExtendedResult])
+            PasswordModifyExtendedResult
+            StartTLSExtendedRequest])
   (:import [com.unboundid.ldap.sdk.controls
             PreReadRequestControl
             PostReadRequestControl
@@ -119,6 +120,13 @@
         ssl-util (SSLUtil. trust-manager)]
     (.createSSLSocketFactory ssl-util)))
 
+(defn- create-ssl-context
+  "Returns an SSLContext object."
+  [{:keys [trust-store]}]
+  (let [trust-manager (create-trust-manager trust-store)
+        ssl-util (SSLUtil. trust-manager)]
+    (.createSSLContext ssl-util)))
+
 (defn- host-as-map
   "Returns a single host as a map containing an :address and an optional
    :port"
@@ -139,13 +147,25 @@
 
 (defn- create-connection
   "Create an LDAPConnection object"
-  [{:keys [host ssl?] :as options}]
+  [{:keys [host ssl? start-tls?] :as options}]
   (let [h (host-as-map host)
-        opt (connection-options options)]
-    (if ssl?
+        opt (connection-options options)
+        default-port 389]
+    (cond
+      (and ssl? start-tls?)
+      (throw (IllegalArgumentException. "Can't have both SSL and startTLS"))
+
+      ssl?
       (let [ssl (create-ssl-factory options)]
         (LDAPConnection. ssl opt (:address h) (or (:port h) 636)))
-      (LDAPConnection. opt (:address h) (or (:port h) 389)))))
+
+      start-tls?
+      (let [start-tls-req (StartTLSExtendedRequest. (create-ssl-context options))]
+        (doto (LDAPConnection. opt (:address h) (or (:port h) default-port))
+          (.processExtendedOperation start-tls-req)))
+
+      :else
+      (LDAPConnection. opt (:address h) (or (:port h) default-port)))))
 
 (defn- bind-request
   "Returns a BindRequest object"
