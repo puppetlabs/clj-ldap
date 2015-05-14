@@ -63,6 +63,8 @@
    (ldap/connect {:host (str "localhost:" port)})
    (ldap/connect {:ssl? true
                   :host {:port ssl-port}})
+   (ldap/connect {:start-tls? true
+                  :host {:port port}})
    (ldap/connect {:host {:port port}
                   :connect-timeout 1000
                   :timeout 5000})

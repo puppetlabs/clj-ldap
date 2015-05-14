@@ -25,7 +25,8 @@
             DereferencePolicy])
   (:import [com.unboundid.ldap.sdk.extensions
             PasswordModifyExtendedRequest
-            PasswordModifyExtendedResult])
+            PasswordModifyExtendedResult
+            StartTLSExtendedRequest])
   (:import [com.unboundid.ldap.sdk.controls
             PreReadRequestControl
             PostReadRequestControl
@@ -75,7 +76,7 @@
   "Adds the values contained in given response control to the given map"
   [m control]
   (condp instance? control
-    PreReadResponseControl 
+    PreReadResponseControl
     (update-in m [:pre-read] merge (entry-as-map (.getEntry control) false))
     PostReadResponseControl
     (update-in m [:post-read] merge (entry-as-map (.getEntry control) false))
@@ -104,14 +105,27 @@
     (when timeout         (.setResponseTimeoutMillis opt timeout))
     opt))
 
+(defn- create-trust-manager
+  "If the trust-store is truthy, returns a TrustStoreTrustManager created with
+  it; otherwise, returns a TrustAllTrustManager."
+  [trust-store]
+  (if trust-store
+    (TrustStoreTrustManager. trust-store)
+    (TrustAllTrustManager.)))
+
 (defn- create-ssl-factory
   "Returns a SSLSocketFactory object"
   [{:keys [trust-store]}]
-  (let [trust-manager (if trust-store
-                        (TrustStoreTrustManager. trust-store)
-                        (TrustAllTrustManager.))
+  (let [trust-manager (create-trust-manager trust-store)
         ssl-util (SSLUtil. trust-manager)]
     (.createSSLSocketFactory ssl-util)))
+
+(defn- create-ssl-context
+  "Returns an SSLContext object."
+  [{:keys [trust-store]}]
+  (let [trust-manager (create-trust-manager trust-store)
+        ssl-util (SSLUtil. trust-manager)]
+    (.createSSLContext ssl-util)))
 
 (defn- host-as-map
   "Returns a single host as a map containing an :address and an optional
@@ -133,13 +147,25 @@
 
 (defn- create-connection
   "Create an LDAPConnection object"
-  [{:keys [host ssl?] :as options}]
+  [{:keys [host ssl? start-tls?] :as options}]
   (let [h (host-as-map host)
-        opt (connection-options options)]
-    (if ssl?
+        opt (connection-options options)
+        default-port 389]
+    (cond
+      (and ssl? start-tls?)
+      (throw (IllegalArgumentException. "Can't have both SSL and startTLS"))
+
+      ssl?
       (let [ssl (create-ssl-factory options)]
         (LDAPConnection. ssl opt (:address h) (or (:port h) 636)))
-      (LDAPConnection. opt (:address h) (or (:port h) 389)))))
+
+      start-tls?
+      (let [start-tls-req (StartTLSExtendedRequest. (create-ssl-context options))]
+        (doto (LDAPConnection. opt (:address h) (or (:port h) default-port))
+          (.processExtendedOperation start-tls-req)))
+
+      :else
+      (LDAPConnection. opt (:address h) (or (:port h) default-port)))))
 
 (defn- bind-request
   "Returns a BindRequest object"
@@ -252,8 +278,8 @@
   (if-let [n (.nextEntry source)]
     (cons n (lazy-seq (entry-seq source)))))
 
-;; Extended version of search-results function using a 
-;; SearchRequest that uses a SimplePagedResultsControl.  
+;; Extended version of search-results function using a
+;; SearchRequest that uses a SimplePagedResultsControl.
 ;; Allows us to read arbitrarily large result sets.
 ;; TODO make this lazy
 (defn- search-all-results
@@ -269,15 +295,15 @@
       (.setControls req (list (SimplePagedResultsControl. sizeLimit cookie)))
       (let [res (.search connection req)
             control (SimplePagedResultsControl/get res)
-            newres (->> (.getSearchEntries res) 
-                     (map entry-as-map) 
-                     (remove empty?) 
+            newres (->> (.getSearchEntries res)
+                     (map entry-as-map)
+                     (remove empty?)
                      (into results))]
         (if (and
               (not-nil? control)
               (> (.getValueLength (.getCookie control)) 0))
           (recur newres (.getCookie control))
-          (seq newres)))))) 
+          (seq newres))))))
 
 (defn- search-results
   "Returns a sequence of search results for the given search criteria."
@@ -352,7 +378,7 @@
                     JKS format file, optional, defaults to trusting all
                     certificates
    :connect-timeout The timeout for making connections (milliseconds),
-                    defaults to 1 minute   
+                    defaults to 1 minute
    :timeout         The timeout when waiting for a response from the server
                     (milliseconds), defaults to 5 minutes
    "
@@ -376,7 +402,7 @@ If an LDAP connection pool object is passed as the connection argument
 the bind attempt will have no side-effects, leaving the state of the
 underlying connections unchanged."
   [connection bind-dn password]
-  (try 
+  (try
     (let [bind-result (.bind connection bind-dn password)]
       (if (= ResultCode/SUCCESS (.getResultCode bind-result)) true false))
     (catch Exception _ false)))
@@ -439,7 +465,7 @@ returned either before or after the modifications have taken place."
    the password of the currently-authenticated user, or another user if their
    DN is provided and the caller has the required authorisation."
   ([connection new]
-    (let [request (PasswordModifyExtendedRequest. new)] 
+    (let [request (PasswordModifyExtendedRequest. new)]
       (.processExtendedOperation connection request)))
 
   ([connection old new]
@@ -453,9 +479,9 @@ returned either before or after the modifications have taken place."
 (defn modify-rdn
   "Modifies the RDN (Relative Distinguished Name) of an entry in the connected
   ldap server.
-  
+
   The new-rdn has the form cn=foo or ou=foo. Using just foo is not sufficient.
-  The delete-old-rdn boolean option indicates whether to delete the current 
+  The delete-old-rdn boolean option indicates whether to delete the current
   RDN value from the target entry."
   [connection dn new-rdn delete-old-rdn]
   (let [request (ModifyDNRequest. dn new-rdn delete-old-rdn)]

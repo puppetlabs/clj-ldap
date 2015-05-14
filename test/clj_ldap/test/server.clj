@@ -7,6 +7,8 @@
             DirectoryService])
   (:import [org.apache.directory.server.ldap
             LdapServer])
+  (:import [org.apache.directory.server.ldap.handlers.extended
+            StartTlsHandler])
   (:import [org.apache.directory.server.protocol.shared.transport
             TcpTransport])
   (:import [java.util HashSet])
@@ -46,6 +48,7 @@
         ldap-server (doto (LdapServer.)
                       (.setDirectoryService directory-service)
                       (.setAllowAnonymousAccess true)
+                      (.addExtendedOperationHandler (StartTlsHandler.))
                       (.setTransports
                        (into-array [ldap-transport ssl-transport])))]
     (-> (add-partition! directory-service
