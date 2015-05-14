@@ -374,6 +374,8 @@
    :password        The password to bind with, optional
    :num-connections The number of connections in the pool, defaults to 1
    :ssl?            Boolean, connect over SSL (ldaps), defaults to false
+   :start-tls?      Boolean, use startTLS to initiate TLS on an otherwise
+                    unsecured connection, defaults to false.
    :trust-store     Only trust SSL certificates that are in this
                     JKS format file, optional, defaults to trusting all
                     certificates
