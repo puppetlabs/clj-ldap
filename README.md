@@ -210,3 +210,13 @@ Deletes the given entry in the connected ldap server. Optionally takes a map tha
                        {:pre-read #{"telephoneNumber"}})
                        
 Throws a [LDAPException](http://www.unboundid.com/products/ldap-sdk/docs/javadoc/com/unboundid/ldap/sdk/LDAPException.html) if the object does not exist or an error occurs.
+
+## Support
+
+To file a bug, please open a Github issue against this project. Bugs and PRs are
+addressed on a best-effort basis. Puppet Labs does not guarantee support for
+this project.
+
+## License
+
+Eclipse Public License, v 1.0
