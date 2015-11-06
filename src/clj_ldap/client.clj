@@ -99,10 +99,11 @@
 
 (defn- connection-options
   "Returns a LDAPConnectionOptions object"
-  [{:keys [connect-timeout timeout]}]
+  [{:keys [connect-timeout timeout follow-referrals?]}]
   (let [opt (LDAPConnectionOptions.)]
     (when connect-timeout (.setConnectTimeoutMillis opt connect-timeout))
     (when timeout         (.setResponseTimeoutMillis opt timeout))
+    (when (some? follow-referrals?) (.setFollowReferrals opt follow-referrals?))
     opt))
 
 (defn- create-trust-manager
@@ -373,6 +374,7 @@
    :bind-dn         The DN to bind as, optional
    :password        The password to bind with, optional
    :num-connections The number of connections in the pool, defaults to 1
+   :follow-referrals? Boolean, whether or not to follow Active Directory referrals
    :ssl?            Boolean, connect over SSL (ldaps), defaults to false
    :trust-store     Only trust SSL certificates that are in this
                     JKS format file, optional, defaults to trusting all
