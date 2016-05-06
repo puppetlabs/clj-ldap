@@ -1,4 +1,4 @@
-(defproject puppetlabs/clj-ldap "0.1.4-SNAPSHOT"
+(defproject puppetlabs/clj-ldap "0.1.4"
   :description "Clojure ldap client (Puppet Labs's fork)."
   :url "https://github.com/puppetlabs/clj-ldap"
   :dependencies [[org.clojure/clojure "1.6.0"]
