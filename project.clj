@@ -7,7 +7,11 @@
                                   [org.apache.directory.server/apacheds-all "1.5.5"]
                                   [fs "1.1.2"]
                                   [org.slf4j/slf4j-simple "1.5.6"]]}}
-  :deploy-repositories [["local-test"]]
+
+  :deploy-repositories [["releases" {:url "https://clojars.org/repo"
+                                     :username :env/clojars_jenkins_username
+                                     :password :env/clojars_jenkins_password
+                                     :sign-releases false}]]
   :license {:name "Eclipse Public License - v 1.0"
             :url "http://www.eclipse.org/legal/epl-v10.html"
             :distribution :repo
