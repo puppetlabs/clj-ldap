@@ -5,15 +5,15 @@ clj-ldap is a thin layer on the [unboundid sdk](http://www.unboundid.com/product
 
      :dependencies [[org.clojars.pntblnk/clj-ldap "0.0.9"]]
 
-# Example 
+# Example
 
     (ns example
       (:require [clj-ldap.client :as ldap]))
-      
+
     (def ldap-server (ldap/connect {:host "ldap.example.com"}))
-    
+
     (ldap/get ldap-server "cn=dude,ou=people,dc=example,dc=com")
-    
+
     ;; Returns a map such as
     {:gidNumber "2000"
      :loginShell "/bin/bash"
@@ -54,19 +54,19 @@ Throws an [LDAPException](http://www.unboundid.com/products/ldap-sdk/docs/javado
 
 An example:
     (ldap/connect conn {:host "ldap.example.com" :num-connections 10})
-    
+
     (ldap/connect conn {:host [{:address "ldap1.example.com" :port 8000}
                                {:address "ldap3.example.com"}
                                "ldap2.example.com:8001"]
                         :ssl? true
                         :num-connections 9})
-                        
+
     (ldap/connect conn {:host {:port 8000}})
-                               
+
 
 ## bind? [connection bind-dn password] [connection-pool bind-dn password]
 
-Usage: 
+Usage:
     (ldap/bind? conn "cn=dude,ou=people,dc=example,dc=com" "somepass")
 
 Performs a bind operation using the provided connection, bindDN and
@@ -82,9 +82,9 @@ the bind attempt will have no side-effects, leaving the state of the
 underlying connections unchanged.
 
 ## get [connection dn] [connection dn attributes]
-  
+
 If successful, returns a map containing the entry for the given DN.
-Returns nil if the entry doesn't exist. 
+Returns nil if the entry doesn't exist.
 
     (ldap/get conn "cn=dude,ou=people,dc=example,dc=com")
 
@@ -105,10 +105,10 @@ Adds an entry to the connected ldap server. The entry is map of keywords to valu
                     :sn "a"
                     :description "His dudeness"
                     :telephoneNumber ["1919191910" "4323324566"]})
-                    
+
 Throws a [LDAPException](http://www.unboundid.com/products/ldap-sdk/docs/javadoc/com/unboundid/ldap/sdk/LDAPException.html) if there is an error with the request or the add failed.
 
-## modify [connection dn modifications]                    
+## modify [connection dn modifications]
 
 Modifies an entry in the connected ldap server. The modifications are
 a map in the form:
@@ -146,8 +146,8 @@ The values of the attributes given in :pre-read and :post-read are available in 
      (ldap/modify conn "uid=maxuid,ou=people,dc=example,dc=com"
                   {:increment {:uidNumber 1}
                    :post-read #{:uidNumber}})
-     
-     returns> 
+
+     returns>
        {:code 0
         :name "success"
         :post-read {:uidNumber "2002"}}
@@ -171,7 +171,7 @@ Options is a map with the following optional entries:
                    defaults to all user attributes
 e.g
     (ldap/search conn "ou=people,dc=example,dc=com")
-    
+
     (ldap/search conn "ou=people,dc=example,dc=com" {:attributes [:cn]})
 
 Throws a [LDAPSearchException](http://www.unboundid.com/products/ldap-sdk/docs/javadoc/com/unboundid/ldap/sdk/LDAPSearchException.html) on error.
@@ -194,13 +194,13 @@ Options is a map with the following optional entries:
 
 e.g
      (ldap/search! conn "ou=people,dc=example,dc=com" println)
-     
+
      (ldap/search! conn "ou=people,dc=example,dc=com"
                         {:filter "sn=dud*"}
                         (fn [x]
                            (println "Hello " (:cn x))))
 
-Throws a [LDAPSearchException](http://www.unboundid.com/products/ldap-sdk/docs/javadoc/com/unboundid/ldap/sdk/LDAPSearchException.html) if an error occurs during search. Throws an [EntrySourceException](http://www.unboundid.com/products/ldap-sdk/docs/javadoc/com/unboundid/ldap/sdk/EntrySourceException.html) if there is an eror obtaining search results. 
+Throws a [LDAPSearchException](http://www.unboundid.com/products/ldap-sdk/docs/javadoc/com/unboundid/ldap/sdk/LDAPSearchException.html) if an error occurs during search. Throws an [EntrySourceException](http://www.unboundid.com/products/ldap-sdk/docs/javadoc/com/unboundid/ldap/sdk/EntrySourceException.html) if there is an eror obtaining search results.
 
 ## delete [connection dn] [connection dn options]
 
@@ -208,16 +208,21 @@ Deletes the given entry in the connected ldap server. Optionally takes a map tha
 
      (ldap/delete conn "cn=dude,ou=people,dc=example,dc=com")
 
-     (ldap/delete conn "cn=dude,ou=people,dc=example,dc=com" 
+     (ldap/delete conn "cn=dude,ou=people,dc=example,dc=com"
                        {:pre-read #{"telephoneNumber"}})
-                       
+
 Throws a [LDAPException](http://www.unboundid.com/products/ldap-sdk/docs/javadoc/com/unboundid/ldap/sdk/LDAPException.html) if the object does not exist or an error occurs.
 
 ## Support
 
-To file a bug, please open a Github issue against this project. Bugs and PRs are
-addressed on a best-effort basis. Puppet Labs does not guarantee support for
+To file a bug, please open a Jira ticket against this project. Bugs and PRs are
+addressed on a best-effort basis. Puppet Inc does not guarantee support for
 this project.
+
+## Maintenance
+Maintainers: Jonathan Newman <jonathan.newman@puppet.com>
+Tickets: [Puppet Enterprise](https://tickets.puppetlabs.com/browse/ENTERPRISE/). Make sure to set component to "clj-ldap".
+
 
 ## License
 
