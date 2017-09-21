@@ -6,7 +6,9 @@
   :profiles {:dev {:dependencies [[jline "0.9.94"]
                                   [org.apache.directory.server/apacheds-all "1.5.5"]
                                   [fs "1.1.2"]
-                                  [org.slf4j/slf4j-simple "1.5.6"]]}}
+                                  [org.slf4j/slf4j-simple "1.5.6"]]
+                   :jvm-opts ["-Djava.security.properties=./dev-resources/java.security"]}}
+
 
   :deploy-repositories [["releases" {:url "https://clojars.org/repo"
                                      :username :env/clojars_jenkins_username
