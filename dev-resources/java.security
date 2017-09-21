@@ -1,0 +1,4 @@
+# The embedded LDAP server may use RSA keys with short moduli during testing;
+# this security file disables short key checking during testing so that we
+# don't have to roll our own TLS key generation.
+jdk.certpath.disabledAlgorithms=
