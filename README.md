@@ -46,6 +46,10 @@ Options is a map with the following entries:
     :trust-store     Only trust SSL certificates that are in this
                      JKS format file, optional, defaults to trusting all
                      certificates
+    :verify-host?    Verifies the hostname of the specified certificate,
+                     false by default.
+    :wildcard-host?  Allows wildcard in certificate hostname verification,
+                     false by default.
     :connect-timeout The timeout for making connections (milliseconds),
     :timeout         The timeout when waiting for a response from the server
                      (milliseconds), defaults to 5 minutes
