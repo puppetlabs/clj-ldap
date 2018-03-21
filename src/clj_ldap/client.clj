@@ -38,7 +38,8 @@
   (:import [com.unboundid.util.ssl
             SSLUtil
             TrustAllTrustManager
-            TrustStoreTrustManager]))
+            TrustStoreTrustManager
+            HostNameSSLSocketVerifier]))
 
 ;;======== Helper functions ====================================================
 
@@ -99,10 +100,11 @@
 
 (defn- connection-options
   "Returns a LDAPConnectionOptions object"
-  [{:keys [connect-timeout timeout]}]
+  [{:keys [connect-timeout timeout verify-host? wildcard-host?]}]
   (let [opt (LDAPConnectionOptions.)]
-    (when connect-timeout (.setConnectTimeoutMillis opt connect-timeout))
-    (when timeout         (.setResponseTimeoutMillis opt timeout))
+    (when connect-timeout      (.setConnectTimeoutMillis opt connect-timeout))
+    (when timeout              (.setResponseTimeoutMillis opt timeout))
+    (when (true? verify-host?) (.setSSLSocketVerifier opt (HostNameSSLSocketVerifier. (true? wildcard-host?))))
     opt))
 
 (defn- create-trust-manager
@@ -379,6 +381,10 @@
    :trust-store     Only trust SSL certificates that are in this
                     JKS format file, optional, defaults to trusting all
                     certificates
+   :verify-host?    Verifies the hostname of the specified certificate,
+                    false by default.
+   :wildcard-host?  Allows wildcard in certificate hostname verification,
+                    false by default.
    :connect-timeout The timeout for making connections (milliseconds),
                     defaults to 1 minute
    :timeout         The timeout when waiting for a response from the server
