@@ -122,13 +122,6 @@
         ssl-util (SSLUtil. trust-manager)]
     (.createSSLSocketFactory ssl-util)))
 
-(defn- create-ssl-context
-  "Returns an SSLContext object."
-  [{:keys [trust-store]}]
-  (let [trust-manager (create-trust-manager trust-store)
-        ssl-util (SSLUtil. trust-manager)]
-    (.createSSLContext ssl-util)))
-
 (defn- host-as-map
   "Returns a single host as a map containing an :address and an optional
    :port"
@@ -158,11 +151,10 @@
       (throw (IllegalArgumentException. "Can't have both SSL and startTLS"))
 
       ssl?
-      (let [ssl (create-ssl-factory options)]
-        (LDAPConnection. ssl opt (:address h) (or (:port h) 636)))
+      (LDAPConnection. (create-ssl-factory options) opt (:address h) (or (:port h) 636))
 
       start-tls?
-      (let [start-tls-req (StartTLSExtendedRequest. (create-ssl-context options))]
+      (let [start-tls-req (StartTLSExtendedRequest. (create-ssl-factory options))]
         (doto (LDAPConnection. opt (:address h) (or (:port h) default-port))
           (.processExtendedOperation start-tls-req)))
 
