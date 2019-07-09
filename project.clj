@@ -2,7 +2,7 @@
   :description "Clojure ldap client (Puppet Labs's fork)."
   :url "https://github.com/puppetlabs/clj-ldap"
   :dependencies [[org.clojure/clojure "1.8.0"]
-                 [com.unboundid/unboundid-ldapsdk "4.0.7"]]
+                 [com.unboundid/unboundid-ldapsdk "4.0.11"]]
   :profiles {:dev {:dependencies [[jline "0.9.94"]
                                   [org.apache.directory.server/apacheds-all "1.5.5"]
                                   [fs "1.1.2"]
