@@ -25,9 +25,9 @@
 
 ;; People to test with
 (def person-a*
-     {:dn (format dn* "testa")
+     {:dn (format dn* "testaü")
       :object {:objectClass object-class*
-               :cn "testa"
+               :cn "testaü"
                :sn "a"
                :description "description a"
                :telephoneNumber "000000001"
@@ -73,8 +73,8 @@
    (ldap/connect {:host [(str "localhost:" ssl-port)
                          {:port ssl-port}]
                   :ssl? true
-                  :num-connections 5})  
-   ])
+                  :num-connections 5})])
+
 
 
 (defn- test-server
@@ -186,16 +186,16 @@
 (deftest test-search
   (is (= (set (map :cn
                    (ldap/search *conn* base* {:attributes [:cn]})))
-         (set [nil "testa" "testb" "Saul Hazledine"])))
+         (set [nil "testaü" "testb" "Saul Hazledine"])))
   (is (= (set (map :cn
                    (ldap/search *conn* base*
                                 {:attributes [:cn] :filter "cn=test*"})))
-         (set ["testa" "testb"])))
+         (set ["testaü" "testb"])))
   (binding [*side-effects* #{}]
     (ldap/search! *conn* base* {:attributes [:cn :sn] :filter "cn=test*"}
                   (fn [x]
                     (set! *side-effects*
                           (conj *side-effects* (dissoc x :dn)))))
     (is (= *side-effects*
-           (set [{:cn "testa" :sn "a"}
+           (set [{:cn "testaü" :sn "a"}
                  {:cn "testb" :sn "b"}])))))

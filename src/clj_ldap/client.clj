@@ -3,7 +3,6 @@
   (:refer-clojure :exclude [get])
   (:require [clojure.string :as string])
   (:import [com.unboundid.ldap.sdk
-            LDAPResult
             LDAPConnectionOptions
             LDAPConnection
             ResultCode
@@ -21,11 +20,9 @@
             SearchRequest
             LDAPEntrySource
             EntrySourceException
-            SearchScope
-            DereferencePolicy])
+            SearchScope])
   (:import [com.unboundid.ldap.sdk.extensions
             PasswordModifyExtendedRequest
-            PasswordModifyExtendedResult
             StartTLSExtendedRequest])
   (:import [com.unboundid.ldap.sdk.controls
             PreReadRequestControl
@@ -33,8 +30,6 @@
             PreReadResponseControl
             PostReadResponseControl
             SimplePagedResultsControl])
-  (:import [com.unboundid.util
-            Base64])
   (:import [com.unboundid.util.ssl
             SSLUtil
             TrustAllTrustManager
@@ -46,9 +41,7 @@
 (def not-nil? (complement nil?))
 
 (defn encode [attr]
-  (if (.needsBase64Encoding attr)
-    (Base64/encode (.getValueByteArray attr))
-    (.getValue attr)))
+  (.getValue attr))
 
 (defn- extract-attribute
   "Extracts [:name value] from the given attribute object. Converts
@@ -63,10 +56,9 @@
 (defn- entry-as-map
   "Converts an Entry object into a map optionally adding the DN"
   ([entry]
-     (entry-as-map entry true))
+   (entry-as-map entry true))
   ([entry dn?]
-     (let [col-a (.getAttributes entry)
-           attrs (seq (.getAttributes entry))]
+   (let [attrs (seq (.getAttributes entry))]
        (if dn?
          (apply hash-map :dn (.getDN entry)
                 (mapcat extract-attribute attrs))
@@ -256,16 +248,6 @@
     (doto (ModifyRequest. dn (into-array all))
       (add-request-controls modifications))))
 
-(defn- next-entry
-  "Attempts to get the next entry from an LDAPEntrySource object"
-  [source]
-  (try
-    (.nextEntry source)
-    (catch EntrySourceException e
-      (if (.mayContinueReading e)
-        (.nextEntry source)
-        (throw e)))))
-
 (defn- entry-seq
   "Returns a lazy sequence of entries from an LDAPEntrySource object"
   [source]
@@ -413,9 +395,9 @@ underlying connections unchanged."
    optional collection that specifies which attributes will be returned
    from the server."
   ([connection dn]
-     (get connection dn nil))
+   (get connection dn nil))
   ([connection dn attributes]
-     (if-let [result (if attributes
+   (if-let [result (if attributes
                        (.getEntry connection dn
                                   (into-array java.lang.String
                                               (map name attributes)))
@@ -465,15 +447,15 @@ returned either before or after the modifications have taken place."
    the password of the currently-authenticated user, or another user if their
    DN is provided and the caller has the required authorisation."
   ([connection new]
-    (let [request (PasswordModifyExtendedRequest. new)]
+   (let [request (PasswordModifyExtendedRequest. new)]
       (.processExtendedOperation connection request)))
 
   ([connection old new]
-    (let [request (PasswordModifyExtendedRequest. old new)]
+   (let [request (PasswordModifyExtendedRequest. old new)]
       (.processExtendedOperation connection request)))
 
   ([connection old new dn]
-    (let [request (PasswordModifyExtendedRequest. dn old new)]
+   (let [request (PasswordModifyExtendedRequest. dn old new)]
       (.processExtendedOperation connection request))))
 
 (defn modify-rdn
@@ -493,9 +475,9 @@ returned either before or after the modifications have taken place."
    a map that can contain the entry :pre-read to indicate the attributes
    that should be read before deletion."
   ([connection dn]
-     (delete connection dn nil))
+   (delete connection dn nil))
   ([connection dn options]
-     (let [delete-obj (DeleteRequest. dn)]
+   (let [delete-obj (DeleteRequest. dn)]
        (when options
          (add-request-controls delete-obj options))
        (ldap-result
@@ -513,9 +495,9 @@ returned either before or after the modifications have taken place."
       :attributes  A collection of the attributes to return,
                    defaults to all user attributes"
   ([connection base]
-     (search-all connection base nil))
+   (search-all connection base nil))
   ([connection base options]
-     (search-all-results connection (search-criteria base options))))
+   (search-all-results connection (search-criteria base options))))
 
 (defn search
   "Runs a search on the connected ldap server, reads all the results into
@@ -529,9 +511,9 @@ returned either before or after the modifications have taken place."
       :attributes  A collection of the attributes to return,
                    defaults to all user attributes"
   ([connection base]
-     (search connection base nil))
+   (search connection base nil))
   ([connection base options]
-     (search-results connection (search-criteria base options))))
+   (search-results connection (search-criteria base options))))
 
 (defn search!
   "Runs a search on the connected ldap server and executes the given
@@ -548,9 +530,9 @@ returned either before or after the modifications have taken place."
       :queue-size  The size of the internal queue used to store results before
                    they are passed to the function, the default is 100"
   ([connection base f]
-     (search! connection base nil f))
+   (search! connection base nil f))
   ([connection base options f]
-     (let [queue-size (or (:queue-size options) 100)]
+   (let [queue-size (or (:queue-size options) 100)]
        (search-results! connection
                         (search-criteria base options)
                         queue-size
