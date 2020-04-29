@@ -3,7 +3,7 @@
 
 clj-ldap is a thin layer on the [unboundid sdk](http://www.unboundid.com/products/ldap-sdk/) and allows clojure programs to talk to ldap servers. This library is available on [clojars.org](http://clojars.org/search?q=clj-ldap)
 
-     :dependencies [[puppetlabs/clj-ldap "0.2.1"]]
+     :dependencies [[puppetlabs/clj-ldap "0.3.0"]]
 
 # Example
 
@@ -46,6 +46,8 @@ Options is a map with the following entries:
     :trust-store     Only trust SSL certificates that are in this
                      JKS format file, optional, defaults to trusting all
                      certificates
+    :trust-managers  An optional TrustManager array to be used in place of
+                     a temporary keystore to create an SSLSocketFactory.
     :verify-host?    Verifies the hostname of the specified certificate,
                      false by default.
     :wildcard-host?  Allows wildcard in certificate hostname verification,
@@ -133,7 +135,7 @@ a map in the form:
       :post-read
         #{:attribute-c :attribute-d}}
 
-Where :add adds an attribute value, :delete deletes an attribute value and :replace replaces the set of values for the attribute with the ones specified. The entries :pre-read and :post-read specify attributes that have be read and returned either before or after the modifications have taken place. 
+Where :add adds an attribute value, :delete deletes an attribute value and :replace replaces the set of values for the attribute with the ones specified. The entries :pre-read and :post-read specify attributes that have be read and returned either before or after the modifications have taken place.
 
 All the keys in the map are optional e.g:
 

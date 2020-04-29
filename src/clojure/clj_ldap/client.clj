@@ -33,8 +33,8 @@
   (:import [com.unboundid.util.ssl
             SSLUtil
             TrustAllTrustManager
-            TrustStoreTrustManager
-            HostNameSSLSocketVerifier]))
+            HostNameSSLSocketVerifier])
+  (:import [com.puppetlabs.ldap Utils]))
 
 ;;======== Helper functions ====================================================
 
@@ -99,19 +99,22 @@
     (when (true? verify-host?) (.setSSLSocketVerifier opt (HostNameSSLSocketVerifier. (true? wildcard-host?))))
     opt))
 
-(defn- create-trust-manager
-  "If the trust-store is truthy, returns a TrustStoreTrustManager created with
-  it; otherwise, returns a TrustAllTrustManager."
-  [trust-store]
-  (if trust-store
-    (TrustStoreTrustManager. trust-store)
-    (TrustAllTrustManager.)))
+(defn- create-ssl-util
+  "If the trust-manager is truthy, returns a SSLUtil created with
+  it; otherwise, if trust-store is truthy, returns a SSLUtil created with
+  it. If both are falsy, returns a SSLUtil created with a TrustAllTrustManager."
+  [trust-managers trust-store]
+  (if trust-managers
+    (Utils/trustManagersToSSLUtil trust-managers)
+    (if trust-store
+      (Utils/trustStoreToSSLUtil trust-store)
+      (Utils/trustManagerToSSLUtil
+        (TrustAllTrustManager.)))))
 
 (defn- create-ssl-factory
   "Returns a SSLSocketFactory object"
-  [{:keys [trust-store]}]
-  (let [trust-manager (create-trust-manager trust-store)
-        ssl-util (SSLUtil. trust-manager)]
+  [{:keys [trust-managers trust-store]}]
+  (let [ssl-util (create-ssl-util trust-managers trust-store)]
     (.createSSLSocketFactory ssl-util)))
 
 (defn- host-as-map
@@ -355,6 +358,8 @@
    :trust-store     Only trust SSL certificates that are in this
                     JKS format file, optional, defaults to trusting all
                     certificates
+   :trust-managers  An optional TrustManager array to be used in place of
+                    a temporary keystore to create an SSLSocketFactory.
    :verify-host?    Verifies the hostname of the specified certificate,
                     false by default.
    :wildcard-host?  Allows wildcard in certificate hostname verification,
