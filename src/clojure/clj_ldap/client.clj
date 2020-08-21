@@ -215,6 +215,7 @@
   [modify-op attribute values]
   (cond
     (coll? values)    (Modification. modify-op attribute (into-array values))
+    (bytes? values)   (Modification. modify-op attribute values)
     (= :all values)   (Modification. modify-op attribute)
     :else             (Modification. modify-op attribute (str values))))
 
