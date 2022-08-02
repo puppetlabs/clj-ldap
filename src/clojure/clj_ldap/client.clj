@@ -113,7 +113,8 @@
 
 (defn- create-ssl-factory
   "Returns a SSLSocketFactory object"
-  [{:keys [trust-managers trust-store]}]
+  [{:keys [trust-managers trust-store] :as options}]
+  (println "!!! CREATE SSL FACTORY: " options)
   (let [ssl-util (create-ssl-util trust-managers trust-store)]
     (.createSSLSocketFactory ssl-util)))
 
@@ -150,6 +151,7 @@
 
       start-tls?
       (let [start-tls-req (StartTLSExtendedRequest. (create-ssl-factory options))]
+        (println "START TLS REQ")
         (doto (LDAPConnection. opt (:address h) (or (:port h) default-port))
           (.processExtendedOperation start-tls-req)))
 

@@ -1,7 +1,7 @@
 (ns clj-ldap.test.client
   "Automated tests for clj-ldap"
   (:require [clj-ldap.client :as ldap])
-  (:require [clj-ldap.test.server :as server])
+  (:require [clj-ldap.test.ssl-server :as server])
   (:use clojure.test)
   (:import [com.unboundid.ldap.sdk LDAPException]))
 

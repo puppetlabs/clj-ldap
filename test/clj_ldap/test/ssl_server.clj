@@ -30,7 +30,7 @@
         ldap-server       (doto (LdapServer.)
                             (.setDirectoryService directory-service)
                             (.addExtendedOperationHandler (StartTlsHandler.))
-                            (.setKeystoreFile "./dev-resources/keystore-local.jks")
+                            (.setKeystoreFile "./dev-resources/keystore-local-new.jks")
                             (.setCertificatePassword "secret")
                             (.setTransports
                              (into-array [ldap-transport ssl-transport])))]
